@@ -23,4 +23,10 @@ class MainActivity : AppCompatActivity() {
     binding.mainText.text = signature;
   }
 
+  companion object {
+    // Used to load the 'gtest' library on application startup.
+    init {
+      System.loadLibrary("native-lib")
+    }
+  }
 }

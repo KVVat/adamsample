@@ -75,33 +75,5 @@ class UniqueIDUnitTest {
     return stdio;
   }
 
-  //@TestInformation(SFR="FDP_ACF_EXT.1/AppUpadate")
-  @Test
-  fun accessControlExt1_appUpdate_TestNormal() {
-    //A test for FDP_ACF_EXT.1/AppUpdate
-    //UserDataProtectionTest.accessControlExt1_appUpdate_TestNormal
-
-    runBlocking {
-      //
-      val file_apk_v1_debug: File =
-        File(Paths.get("src", "test", "resources", "appupdate-v1-debug.apk").toUri());
-      val file_apk_v2_debug: File =
-        File(Paths.get("src", "test", "resources", "appupdate-v2-debug.apk").toUri());
-      val file_apk_v2_signed: File =
-        File(Paths.get("src", "test", "resources", "appupdate-v2-signed.apk").toUri());
-
-      var res = preparerInstall(file_apk_v1_debug, false);
-      assertThat(res.output).startsWith("Success")
-
-      res = preparerInstall(file_apk_v2_debug);
-      assertThat(res.output).startsWith("Success")
-
-      //degrade
-      res = preparerInstall(file_apk_v1_debug, false);
-      assertThat(res.output).startsWith("Failure")
-
-      //unistall the test file before next test
-      client.execute(UninstallRemotePackageRequest("com.example.adamsapmle"), adb.deviceSerial)
-    }
-  }
+  //WIP
 }

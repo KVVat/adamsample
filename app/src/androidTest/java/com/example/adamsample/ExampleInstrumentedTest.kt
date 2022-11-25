@@ -158,7 +158,6 @@ class ExampleInstrumentedTest {
     } finally {
       fTargetStream.close();
     }
-
   }
 
   fun loadSharedPrefs(vararg prefs: String?) {

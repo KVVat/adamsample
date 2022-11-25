@@ -24,7 +24,7 @@ import org.junit.Test
  *
  * See [testing documentation](http://d.android.com/tools/testing).
  */
-class ExampleUnitTest {
+class UniqueIDUnitTest {
 
   @Rule
   @JvmField
@@ -35,8 +35,6 @@ class ExampleUnitTest {
   fun setup() {
     runBlocking {
       client.execute(UninstallRemotePackageRequest("com.example.adamsample"), adb.deviceSerial)
-      client.execute(ShellCommandRequest("rm /data/local/tmp/appupdate-v1-debug.apk"),
-                     adb.deviceSerial)
       client.execute(ShellCommandRequest("rm /data/local/tmp/appupdate-v2-debug.apk"),
                      adb.deviceSerial)
     }
@@ -46,8 +44,6 @@ class ExampleUnitTest {
   fun teardown() {
     runBlocking {
       client.execute(UninstallRemotePackageRequest("com.example.adamsample"), adb.deviceSerial)
-      client.execute(ShellCommandRequest("rm /data/local/tmp/appupdate-v1-debug.apk"),
-                     adb.deviceSerial)
       client.execute(ShellCommandRequest("rm /data/local/tmp/appupdate-v2-debug.apk"),
                      adb.deviceSerial)
     }
@@ -102,28 +98,6 @@ class ExampleUnitTest {
 
       //degrade
       res = preparerInstall(file_apk_v1_debug, false);
-      assertThat(res.output).startsWith("Failure")
-
-      //unistall the test file before next test
-      client.execute(UninstallRemotePackageRequest("com.example.adamsapmle"), adb.deviceSerial)
-    }
-  }
-
-  //@TestInformation(SFR="FDP_ACF_EXT.1/AppUpadate")
-  @Test
-  fun accessControlExt1_appUpdate_TestAbnormal() {
-
-    runBlocking {
-      //
-      val file_apk_v1_debug: File =
-        File(Paths.get("src", "test", "resources", "appupdate-v1-debug.apk").toUri());
-      val file_apk_v2_signed: File =
-        File(Paths.get("src", "test", "resources", "appupdate-v2-signed.apk").toUri());
-
-      var res = preparerInstall(file_apk_v1_debug, false);
-      assertThat(res.output).startsWith("Success")
-      //Signature mismatch case
-      res = preparerInstall(file_apk_v2_signed);
       assertThat(res.output).startsWith("Failure")
 
       //unistall the test file before next test

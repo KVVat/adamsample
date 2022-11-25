@@ -60,7 +60,7 @@ class NativeUnitTest {
       }
 
       if(permission != ""){
-        //println("chmod $permission /data/local/tmp/$fileName")
+
         client.execute(request = ShellCommandRequest("chmod $permission /data/local/tmp/$fileName"),
                        serial = adb.deviceSerial);
       }

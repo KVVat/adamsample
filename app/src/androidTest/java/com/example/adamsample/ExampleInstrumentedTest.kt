@@ -12,16 +12,18 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.BufferedReader
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.io.InputStreamReader
+import java.io.Reader
 import java.nio.charset.Charset
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -41,6 +43,7 @@ class ExampleInstrumentedTest {
   val PREF_NAME = "EncryptedSharedPref"
   lateinit var appContext:Context;
   lateinit var masterKeyAlias:String;
+
   @Before
   fun setup()
   {
@@ -59,6 +62,8 @@ class ExampleInstrumentedTest {
       )
     editor = data.edit()
 
+    val fdelete: File = File(appContext.getFilesDir(), "my_sensitive_loremipsum.txt")
+    if (fdelete.exists()) {fdelete.delete()}
   }
 
   @Test
@@ -82,22 +87,23 @@ class ExampleInstrumentedTest {
   }
 
   @Test
-  fun testEncryptedFile()
-  {
+  fun testEncryptedFile() {
     val fileToWrite = "my_sensitive_loremipsum.txt"
 
-    val isLoremIpsum:InputStream = appContext.resources.openRawResource(
+    val isLoremIpsum: InputStream = appContext.resources.openRawResource(
       appContext.resources.getIdentifier("loremipsum",
-                                   "raw", appContext.packageName));
+                                         "raw", appContext.packageName));
     val content = isLoremIpsum.bufferedReader().use(BufferedReader::readText)
 
+    val fTarget: File = File(appContext.getFilesDir(), fileToWrite)
+
     val encryptedFile = EncryptedFile.Builder(
-      File(appContext.getFilesDir(), fileToWrite),
+      fTarget,
       appContext,
       masterKeyAlias,
       EncryptedFile.FileEncryptionScheme.AES256_GCM_HKDF_4KB
     ).build()
-
+    println(content);
     //Write loaded file with EncryptedFile class
     try {
       val outputStream: FileOutputStream? = encryptedFile.openFileOutput()
@@ -106,27 +112,54 @@ class ExampleInstrumentedTest {
         flush()
         close()
       }
-    } catch (ex: IOException) { throw RuntimeException("IOException") }
-
+    } catch (ex: IOException) {
+      throw RuntimeException("IOException")
+    }
     //Check Availability
+    assert(fTarget.exists())
+    val original:String;
+    encryptedFile.openFileInput().use { fileInputStream ->
+      try {
+        val sb = StringBuilder()
+        val br = BufferedReader(InputStreamReader(fileInputStream) as Reader?)
+        br.readLine()
+          .forEach {
+            sb.append(it)
+          }
+        br.close()
+        original = sb.toString()
+        Log.d("fileContents", original)
 
+      } catch (ex: Exception) {
+        // Error occurred opening raw file for reading.
+        throw RuntimeException("IOException")
+      } finally {
+        fileInputStream.close()
+      }
+    }
     //Check the file is encrypted (Read the file with BufferedReader)
-  }
+    val fTargetStream = FileInputStream(fTarget);
+    try {
+      val sb = StringBuilder()
 
-/*
-  fun MasterKey getMasterKey(Context context, String skeystoreAlias) throws GeneralSecurityException, IOException {
-    KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
-      skeystoreAlias,
-      KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
-    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-      .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-      .setKeySize(256);
-    KeyGenParameterSpec specs = builder.build();
-    MasterKey.Builder masterKeyBuilder = new MasterKey.Builder(context, skeystoreAlias)
-      .setKeyGenParameterSpec(specs);
-    return masterKeyBuilder.build();
+      val br = BufferedReader(InputStreamReader(fTargetStream) as Reader?)
+      br.readLine()
+        .forEach {
+          sb.append(it)
+        }
+      br.close()
+      val encrypted = sb.toString();
+      Log.d("fileContents",encrypted)
+
+      assertNotEquals(original,encrypted)
+    } catch (ex: Exception) {
+      // Error occurred opening raw file for reading.
+      throw RuntimeException("IOException")
+    } finally {
+      fTargetStream.close();
+    }
+
   }
- */
 
   fun loadSharedPrefs(vararg prefs: String?) {
 

@@ -10,6 +10,7 @@ import androidx.security.crypto.MasterKeys
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.example.adamsample.utils.ReflectionUtils
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
@@ -31,7 +32,7 @@ import org.junit.runner.RunWith
  * See [testing documentation](http://d.android.com/tools/testing).
  */
 @RunWith(AndroidJUnit4::class)
-class ExampleInstrumentedTest {
+class EncryptedFileTest {
 
   @get:Rule
   val rule = ActivityScenarioRule(MainActivity::class.java)
@@ -65,7 +66,15 @@ class ExampleInstrumentedTest {
     val fdelete: File = File(appContext.getFilesDir(), "my_sensitive_loremipsum.txt")
     if (fdelete.exists()) {fdelete.delete()}
   }
+  @Test
+  fun testCredentailDir()
+  {
+    val ce_con:Context = ReflectionUtils.invokeReflectionCall(appContext.javaClass,
+                                                              "createCredentialProtectedStorageContext",
+                                                              appContext, null) as Context;
 
+    Log.d("test", ce_con.filesDir.absolutePath);
+  }
   @Test
   fun testEncryptedSharedPreference()
   {
@@ -103,7 +112,7 @@ class ExampleInstrumentedTest {
       masterKeyAlias,
       EncryptedFile.FileEncryptionScheme.AES256_GCM_HKDF_4KB
     ).build()
-    println(content);
+
     //Write loaded file with EncryptedFile class
     try {
       val outputStream: FileOutputStream? = encryptedFile.openFileOutput()
@@ -112,6 +121,7 @@ class ExampleInstrumentedTest {
         flush()
         close()
       }
+
     } catch (ex: IOException) {
       throw RuntimeException("IOException")
     }
@@ -141,7 +151,6 @@ class ExampleInstrumentedTest {
     val fTargetStream = FileInputStream(fTarget);
     try {
       val sb = StringBuilder()
-
       val br = BufferedReader(InputStreamReader(fTargetStream) as Reader?)
       br.readLine()
         .forEach {

@@ -24,7 +24,7 @@ import org.junit.Test
  *
  * See [testing documentation](http://d.android.com/tools/testing).
  */
-class ExampleUnitTest {
+class ApkAccessControlTest {
 
   @Rule
   @JvmField
@@ -91,8 +91,6 @@ class ExampleUnitTest {
         File(Paths.get("src", "test", "resources", "appupdate-v1-debug.apk").toUri());
       val file_apk_v2_debug: File =
         File(Paths.get("src", "test", "resources", "appupdate-v2-debug.apk").toUri());
-      val file_apk_v2_signed: File =
-        File(Paths.get("src", "test", "resources", "appupdate-v2-signed.apk").toUri());
 
       var res = preparerInstall(file_apk_v1_debug, false);
       assertThat(res.output).startsWith("Success")

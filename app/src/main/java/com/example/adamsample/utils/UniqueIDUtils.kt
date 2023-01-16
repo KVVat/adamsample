@@ -2,16 +2,8 @@ package com.example.adamsample.utils
 
 import android.content.Context
 import android.media.MediaDrm
-import android.net.wifi.WifiManager
 import android.provider.Settings
-import android.util.Log
-//import com.google.android.gms.ads.identifier.AdvertisingIdClient
-import java.net.URLConnection
 import java.util.UUID
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.Executors
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 
 class UniqueIDUtils {
@@ -29,9 +21,6 @@ class UniqueIDUtils {
     // https://android-developers.googleblog.com/2017/04/changes-to-device-identifiers-in.html
     fun getAndroidId(ctx: Context):String{
       return Settings.Secure.getString(ctx.getContentResolver(), Settings.System.ANDROID_ID)
-    }
-    fun getIMEI():String {
-      return ""
     }
   }
 }

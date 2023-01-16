@@ -14,28 +14,55 @@ import java.io.InputStream
 import java.nio.charset.Charset
 
 class BootReceiver: BroadcastReceiver() {
+  private val TAG:String = "FCS_CKH_EXT_TEST"
+
   override fun onReceive(appContext: Context?, intent: Intent?) {
-    Log.d("DirectBoot","received!"+intent?.action.toString())
+    //Log.d("DirectBoot","received!"+intent?.action.toString())
     val intentName = intent?.action.toString();
     if(intentName == "android.intent.action.LOCKED_BOOT_COMPLETED"){
-      //Check Device Context Encrypted Storage (DES)
-
-      //Check we can read the file in des and can not read in ces
+      val desContext: Context =
+        appContext!!.createDeviceProtectedStorageContext();// Access appDataFilename that lives in device encrypted storage
+      desContext.moveSharedPreferencesFrom(appContext,TAG);
+      var result_des:String? = "Failed";
+      var result_app:String? = "Failed";
+      try {
+        val sharedPref_des = desContext.getSharedPreferences(TAG, Context.MODE_PRIVATE)
+        result_des = sharedPref_des.getString(TAG,"Failed");
+      } catch (ex:IllegalStateException){
+        //Panic
+        ex.printStackTrace()
+      }
+      try {
+        val sharedPref_app = appContext.getSharedPreferences(TAG, Context.MODE_PRIVATE)
+        result_app = sharedPref_app.getString(TAG,"Failed");
+      } catch (ex:IllegalStateException){
+        //expected
+        ex.printStackTrace()
+      }
+      Log.d(TAG,"des="+result_des+",ces="+result_app);
 
     } else if(intentName == "android.intent.action.BOOT_COMPLETED"){
       //Check Credential Encrypted Storage (CES)
-    } else if(intentName == "android.intent.action.MY_TEST_DES"){
-      Log.d("BootReceiver", "Let's create a file into the DES.")
-      val desContext: Context = appContext!!.createDeviceProtectedStorageContext();// Access appDataFilename that lives in device encrypted storage
-      val isLoremIpsum: InputStream = appContext.resources.openRawResource(
-        appContext.resources.getIdentifier("loremipsum",
-                                           "raw", appContext.packageName));
-
-      createTestFileViaCertainContext("des_",desContext,isLoremIpsum)
-      createTestFileViaCertainContext("ces_",appContext,isLoremIpsum)
-
-      Log.d("test",desContext?.filesDir!!.absolutePath)
-
+      val desContext: Context =
+        appContext!!.createDeviceProtectedStorageContext();// Access appDataFilename that lives in device encrypted storage
+      desContext.moveSharedPreferencesFrom(appContext,TAG);
+      var result_des:String? = "Failed";
+      var result_app:String? = "Failed";
+      try {
+        val sharedPref_des = desContext.getSharedPreferences(TAG, Context.MODE_PRIVATE)
+        result_des = sharedPref_des.getString(TAG,"Failed");
+      } catch (ex:IllegalStateException){
+        //Panic
+        ex.printStackTrace()
+      }
+      try {
+        val sharedPref_app = appContext.getSharedPreferences(TAG, Context.MODE_PRIVATE)
+        result_app = sharedPref_app.getString(TAG,"Failed");
+      } catch (ex:IllegalStateException){
+        //expected
+        ex.printStackTrace()
+      }
+      Log.d(TAG,"des="+result_des+",ces="+result_app);
     }
   }
   fun createTestFileViaCertainContext(prefix:String,targetContext: Context?,input:InputStream,){

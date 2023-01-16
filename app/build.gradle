@@ -3,7 +3,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 def homePath = System.properties['user.home']
-
+def applicationName = 'alltest'
 android {
     namespace 'com.example.adamsample'
     compileSdk 32
@@ -36,7 +36,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            signingConfig signingConfigs.platform
+            signingConfig signingConfigs.bundle
             debuggable true
         }
     }
@@ -79,6 +79,12 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            //def flavor = variant.productFlavors.name[0]
+            outputFileName = "${applicationName}-v${variant.versionCode}-${variant.buildType.name}.apk"
+        }
+    }
 }
 
 dependencies {
@@ -110,6 +116,7 @@ dependencies {
     testImplementation 'com.malinskiy.adam:android-junit4:0.4.7'
     testImplementation 'com.malinskiy.adam:android-junit4-test-annotation-producer:0.4.7'
     testImplementation 'com.willowtreeapps.assertk:assertk-jvm:0.25'
+    testImplementation 'org.simpleframework:simple-xml:2.7.1'
 
 
     androidTestImplementation "androidx.security:security-app-authenticator:1.0.0-alpha02"
@@ -119,5 +126,6 @@ dependencies {
     androidTestImplementation 'com.malinskiy.adam:android-junit4:0.4.7'
     androidTestImplementation 'com.malinskiy.adam:android-junit4-test-annotation-producer:0.4.7'
     androidTestImplementation 'com.willowtreeapps.assertk:assertk-jvm:0.25'
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'
 
 }

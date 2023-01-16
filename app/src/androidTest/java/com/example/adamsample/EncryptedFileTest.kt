@@ -11,6 +11,8 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.adamsample.utils.ReflectionUtils
+import com.malinskiy.adam.junit4.android.rule.Mode
+import com.malinskiy.adam.junit4.rule.AdbRule
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
@@ -36,6 +38,8 @@ class EncryptedFileTest {
 
   @get:Rule
   val rule = ActivityScenarioRule(MainActivity::class.java)
+  @get:Rule
+  val adbRule = AdbRule(mode = Mode.ASSERT)
 
   //lateinit var client:AndroidDebugBridgeClient;
   private lateinit var data: SharedPreferences

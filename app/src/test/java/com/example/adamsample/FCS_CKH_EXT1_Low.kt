@@ -107,6 +107,11 @@ class `FCS_CKH_EXT#1 - Low ` {
       // 1. Check if we can access to the DES(Device Encrypted Storage)
       // 2. Check we can not access to the CES
       assertThat(result?.text).isEqualTo("des=Success,ces=Failed")
+
+      result = AdamUtils.waitLogcatLine(100,"FCS_CKH_EXT_TEST",adb)
+      assertThat { result }.isNotNull()
+      println(result);
+      println(result?.text)
     }
   }
   /*

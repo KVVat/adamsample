@@ -3,6 +3,8 @@ package com.example.adamsample
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyProperties
 import android.util.Log
 import androidx.security.crypto.EncryptedFile
 import androidx.security.crypto.EncryptedSharedPreferences
@@ -10,7 +12,6 @@ import androidx.security.crypto.MasterKeys
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.example.adamsample.utils.ReflectionUtils
 import com.malinskiy.adam.junit4.android.rule.Mode
 import com.malinskiy.adam.junit4.rule.AdbRule
 import java.io.BufferedReader
@@ -28,6 +29,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+
 /**
  * Instrumented test, which will execute on an Android device.
  *
@@ -42,8 +44,8 @@ class EncryptedFileTest {
   val adbRule = AdbRule(mode = Mode.ASSERT)
 
   //lateinit var client:AndroidDebugBridgeClient;
-  private lateinit var data: SharedPreferences
-  private lateinit var editor: SharedPreferences.Editor
+  private lateinit var norm_enc_data: SharedPreferences
+  //private lateinit var norm_editor: SharedPreferences.Editor
 
   val PREF_NAME = "EncryptedSharedPref"
   lateinit var appContext:Context;
@@ -55,9 +57,8 @@ class EncryptedFileTest {
     appContext = InstrumentationRegistry.getInstrumentation().targetContext
     val keyGenParameterSpec = MasterKeys.AES256_GCM_SPEC
     masterKeyAlias = MasterKeys.getOrCreate(keyGenParameterSpec)
-
     //
-    data = EncryptedSharedPreferences
+    norm_enc_data = EncryptedSharedPreferences
       .create(
         PREF_NAME,
         masterKeyAlias,
@@ -65,24 +66,54 @@ class EncryptedFileTest {
         EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
       )
-    editor = data.edit()
 
     val fdelete: File = File(appContext.getFilesDir(), "my_sensitive_loremipsum.txt")
     if (fdelete.exists()) {fdelete.delete()}
   }
-  @Test
-  fun testCredentailDir()
-  {
-    val ce_con:Context = ReflectionUtils.invokeReflectionCall(appContext.javaClass,
-                                                              "createCredentialProtectedStorageContext",
-                                                              appContext, null) as Context;
 
-    Log.d("test", ce_con.filesDir.absolutePath);
+  fun userEncryptedKey(){
+    try {
+      val keyStore: KeyStore = KeyStore.getInstance("AndroidKeyStore")
+      keyStore.load(null)
+      val keyGenerator: KeyGenerator = KeyGenerator.getInstance(
+        KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore")
+
+      // Set the alias of the entry in Android KeyStore where the key will appear
+      // and the constrains (purposes) in the constructor of the Builder
+      keyGenerator.init(KeyGenParameterSpec.Builder(KEY_NAME,
+                                                    KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+                          .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+                          .setUserAuthenticationRequired(true) // Require that the user has unlocked in the last 30 seconds
+                          .setUserAuthenticationValidityDurationSeconds(30)
+                          .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
+                          .build())
+      keyGenerator.generateKey()
+    } catch (e: NoSuchAlgorithmException) {
+      throw java.lang.RuntimeException("Failed to create a symmetric key", e)
+    } catch (e: NoSuchProviderException) {
+      throw java.lang.RuntimeException("Failed to create a symmetric key", e)
+    } catch (e: InvalidAlgorithmParameterException) {
+      throw java.lang.RuntimeException("Failed to create a symmetric key", e)
+    } catch (e: KeyStoreException) {
+      throw java.lang.RuntimeException("Failed to create a symmetric key", e)
+    } catch (e: CertificateException) {
+      throw java.lang.RuntimeException("Failed to create a symmetric key", e)
+    } catch (e: IOException) {
+      throw java.lang.RuntimeException("Failed to create a symmetric key", e)
+    }
   }
+
   @Test
-  fun testEncryptedSharedPreference()
+  fun testEncryptedSharedPreference(){
+    checkEncryptedSharedPreference(norm_enc_data)
+  }
+
+  fun checkEncryptedSharedPreference(data:SharedPreferences)
   {
     val sampleString = "The quick brown fox jumps over the lazy dog";
+
+    var editor: SharedPreferences.Editor = data.edit();
+
     editor.putInt("IntTest", 65535);
     editor.putBoolean("BooleanTest", true);
     editor.putString("StringTest", sampleString);
@@ -174,7 +205,6 @@ class EncryptedFileTest {
   }
 
   fun loadSharedPrefs(vararg prefs: String?) {
-
     // Logging messages left in to view Shared Preferences. I filter out all logs except for ERROR; hence why I am printing error messages.
     for (pref_name in prefs) {
       val preference: SharedPreferences = appContext.getSharedPreferences(pref_name, MODE_PRIVATE)

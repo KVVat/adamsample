@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity() {
     val sharedPref = storageContext().getSharedPreferences(TAG, Context.MODE_PRIVATE)
     sharedPref.edit().putString(TAG,"Success").apply()
     Thread.sleep(500)
+
     Log.d(TAG, "Booted");
 
   }

@@ -16,3 +16,6 @@ rootProject.name = "adamsample"
 include ':app'
 include ':uniqueid'
 include ':appupdate'
+include ':assets'
+include ':assets-reader'
+include ':encryption'

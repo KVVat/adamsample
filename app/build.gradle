@@ -6,7 +6,7 @@ def homePath = System.properties['user.home']
 def applicationName = 'alltest'
 android {
     namespace 'com.example.adamsample'
-    compileSdk 32
+    compileSdk 33
 
     signingConfigs {
         bundle{
@@ -46,7 +46,7 @@ android {
     defaultConfig {
         applicationId "com.example.adamsample"
         minSdk 28
-        targetSdk 32
+        targetSdk 33
         versionCode 2
         versionName "2.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -95,7 +95,7 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment-ktx:2.5.3'
     implementation 'androidx.navigation:navigation-ui-ktx:2.5.3'
 
-    implementation "androidx.security:security-crypto:1.0.0"
+    implementation "androidx.security:security-crypto:1.1.0-alpha04"
     //implementation "androidx.security:security-crypto-ktx:1.0.0"
     implementation "androidx.security:security-identity-credential:1.0.0-alpha03"
     implementation "androidx.security:security-app-authenticator:1.0.0-alpha02"
@@ -120,6 +120,9 @@ dependencies {
 
 
     androidTestImplementation "androidx.security:security-app-authenticator:1.0.0-alpha02"
+    //androidTestImplementation "androidx.security:security-crypto-ktx:1.1.0-alpha04"
+    androidTestImplementation "androidx.security:security-crypto:1.1.0-alpha04"
+
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
     androidTestImplementation 'com.malinskiy.adam:adam:0.4.7'

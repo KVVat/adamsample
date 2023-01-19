@@ -76,8 +76,9 @@ class AdamUtils {
             channel.tryReceive().onClosed {
             }.getOrNull()
         }
+        //add -g option to permit all exisitng runtime option
         stdio = client.execute(InstallRemotePackageRequest(
-          "/data/local/tmp/$fileName", reinstall), serial = adb.deviceSerial)
+          "/data/local/tmp/$fileName", reinstall, listOf("-g")), serial = adb.deviceSerial)
       }
       return stdio
     }

@@ -57,6 +57,23 @@ class PrepareActivity : AppCompatActivity() {
   fun prepareMediaFileForTest(){
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       val contentResolver = application.contentResolver
+      val collection =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+          MediaStore.Images.Media.getContentUri(
+            MediaStore.VOLUME_EXTERNAL
+          )
+        } else {
+          MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        }
+      //if the file already exists, do nothing
+      val cursor = contentResolver.query(collection,
+                                         arrayOf(MediaStore.Video.Media._ID,MediaStore.Images.Media.DISPLAY_NAME),
+                                         "${MediaStore.Images.Media.DISPLAY_NAME}=?", arrayOf(TAG+".jpg"),
+                                         null);
+      if (cursor != null && cursor.moveToFirst()) {
+        return
+      }
+      //
       val photoContentValues = ContentValues()
       photoContentValues.put(MediaStore.Images.Media.DISPLAY_NAME, TAG)
       photoContentValues.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")

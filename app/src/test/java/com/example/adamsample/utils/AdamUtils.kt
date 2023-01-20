@@ -42,10 +42,13 @@ class AdamUtils {
             .split("\n")
             .mapNotNull { LogLine.of(it, deviceTimezone) }
             .filterIsInstance<LogLine.Log>()
-            .filter { it.tag.equals(tagWait) }
+            .filter { it.level == 'D'}
+            .filter {
+              it.tag.equals(tagWait)
+            }
 
           if(!lines.isEmpty()){
-            println(lines);
+            //println(lines);
             tag = lines.get(0).tag
             text = lines.get(0).text
             found = true

@@ -66,120 +66,38 @@ class `FDP_ACC#1 - UserAssets` {
       val file_apk: File =
         File(Paths.get("src", "test", "resources", TEST_MODULE).toUri());
 
-      preparerInstall(file_apk, false);
       AdamUtils.InstallApk(file_apk,false,adb)
       Thread.sleep(SHORT_TIMEOUT*2);
 
       var response: ShellCommandResult
       var result:LogcatResult?
+
       //launch application and prepare
       response = client.execute(ShellCommandRequest("am start -n $TEST_PACKAGE/$TEST_PACKAGE.PrepareActivity"), adb.deviceSerial);
-      Thread.sleep(SHORT_TIMEOUT*5);
+      assertThat(response?.output).equals("Starting")
+      Thread.sleep(LONG_TIMEOUT);
       response = client.execute(ShellCommandRequest("am start -n $TEST_PACKAGE/$TEST_PACKAGE.MainActivity"), adb.deviceSerial);
-      Thread.sleep(SHORT_TIMEOUT*5);
-      result = AdamUtils.waitLogcatLine(5,"FDP_ACC_1_TEST",adb)
-      assertThat { result }.isNotNull()
-      //println(result);
-      println(result?.text)
-      //assertThat{result?.text}.equals("Test Result:true/true/true/true")
+      assertThat(response?.output).equals("Starting")
+      result = AdamUtils.waitLogcatLine(100,"FDP_ACC_1_TEST",adb)
+      assert(result != null)
+      assertThat( result ).isNotNull()
+      assertThat(result?.text).equals("Test Result:true/true/true/true")
 
       //uninstall application =>
       response = client.execute(UninstallRemotePackageRequest(TEST_PACKAGE), adb.deviceSerial)
+      //install application => files execpt media storage will be removed,
 
+      //The app will lost the access permission to the owner file once uninstall it.
+      //so we should reinstall it with -g option to enable read_media_storage permission
       AdamUtils.InstallApk(file_apk,false,adb)
 
       response = client.execute(ShellCommandRequest("am start -n $TEST_PACKAGE/$TEST_PACKAGE.MainActivity"), adb.deviceSerial);
-      Thread.sleep(SHORT_TIMEOUT*5);
+      //Thread.sleep(LONG_TIMEOUT);
       result = AdamUtils.waitLogcatLine(5,"FDP_ACC_1_TEST",adb)
       assertThat { result }.isNotNull()
-      //println(result);
-      println(result?.text)
-
-      //Thread.sleep(SHORT_TIMEOUT*2);
-
-
-      //response =
-      //  client.execute(ShellCommandRequest("run-as ${TEST_PACKAGE} cat /data/data/$TEST_PACKAGE/shared_prefs/UniqueID.xml"), adb.deviceSerial)
-      //store preference into map A
-      //the map contains unique ids below : ADID,UUID,AID,WIDEVINE (see application code)
-      //val dictA:Map<String,String> = fromPrefMapListToDictionary(response.output.trimIndent())
-      //println(dictA);
-
-      //kill process (am force-stop com.package.name)
-      //client.execute(ShellCommandRequest("am force-stop $TEST_PACKAGE"), adb.deviceSerial);
-
-      //launch application
-      //client.execute(ShellCommandRequest("am start -n $TEST_PACKAGE/$TEST_PACKAGE.MainActivity"), adb.deviceSerial);
-      //Thread.sleep(SHORT_TIMEOUT*5);
-
-      //Store preference into map B/check prefernce and compare included values against A
-      //response =
-      //  client.execute(ShellCommandRequest("run-as ${TEST_PACKAGE} cat /data/data/$TEST_PACKAGE/shared_prefs/UniqueID.xml"), adb.deviceSerial)
-
-      //val dictB:Map<String,String> = fromPrefMapListToDictionary(response.output.trimIndent())
-      //println(dictB);
-
-      //Expected : All unique id values should be maintained
-      //assertThat(dictA["UUID"]).isEqualTo(dictB["UUID"])
-      //assertThat(dictA["ADID"]).isEqualTo(dictB["ADID"])
-      //assertThat(dictA["AID"]).isEqualTo(dictB["AID"])
-      //assertThat(dictA["WIDEVINE"]).isEqualTo(dictB["WIDEVINE"])
-
-
-      //install application again
-      //preparerInstall(file_apk, false);
-      //Thread.sleep(SHORT_TIMEOUT*2);
-
-      //launch application
-      //client.execute(ShellCommandRequest("am start -n $TEST_PACKAGE/$TEST_PACKAGE.MainActivity"), adb.deviceSerial);
-      //Thread.sleep(SHORT_TIMEOUT*5);
-      //check preference and compare included values against A and B
-      //response =
-      //  client.execute(ShellCommandRequest("run-as ${TEST_PACKAGE} cat /data/data/$TEST_PACKAGE/shared_prefs/UniqueID.xml"), adb.deviceSerial)
-      //val dictC:Map<String,String> = fromPrefMapListToDictionary(response.output.trimIndent())
-      //println(dictC);
-      //Expected : UUID should be changed. Others should be maintained
-      //assertThat(dictA["UUID"]).isNotEqualTo(dictC["UUID"])
-      //assertThat(dictA["ADID"]).isEqualTo(dictC["ADID"])
-      //assertThat(dictA["AID"]).isEqualTo(dictC["AID"])
-      //assertThat(dictA["WIDEVINE"]).isEqualTo(dictC["WIDEVINE"])
+      //println(result?.text)
+      assertThat{result?.text}.equals("Test Result:false/false/true/false")
     }
-  }
-
-  fun fromPrefMapListToDictionary(xml:String):Map<String,String>{
-    val source = InputSource(StringReader(xml))
-
-    val dbf: DocumentBuilderFactory = DocumentBuilderFactory.newInstance()
-    val db: DocumentBuilder = dbf.newDocumentBuilder()
-    val document: Document = db.parse(source)
-
-    val nodes: NodeList = document.getElementsByTagName("string");
-    var  ret = mutableMapOf<String,String>();
-    for(i in 0 .. nodes.length-1){
-      var node: Node = nodes.item(i);
-      val key:String = node.attributes.getNamedItem("name").nodeValue;
-      val value:String = node.textContent
-      ret.put(key,value);
-    }
-    return ret;
-  }
-
-  fun preparerInstall(apkFile: File, reinstall: Boolean = false): ShellCommandResult {
-    var stdio: ShellCommandResult
-    runBlocking {
-      val fileName = apkFile.name
-      val channel = client.execute(PushFileRequest(apkFile, "/data/local/tmp/$fileName"),
-                                   GlobalScope,
-                                   serial = adb.deviceSerial);
-      while (!channel.isClosedForReceive) {
-        val progress: Double? =
-          channel.tryReceive().onClosed {
-          }.getOrNull()
-      }
-      stdio = client.execute(InstallRemotePackageRequest(
-        "/data/local/tmp/$fileName", reinstall), serial = adb.deviceSerial)
-    }
-    return stdio;
   }
 
 }

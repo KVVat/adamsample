@@ -5,6 +5,7 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotEqualTo
 import com.example.adamsample.rule.AdbDeviceRule
+import com.example.adamsample.utils.AdamUtils
 import com.malinskiy.adam.request.pkg.InstallRemotePackageRequest
 import com.malinskiy.adam.request.pkg.UninstallRemotePackageRequest
 import com.malinskiy.adam.request.shell.v1.ShellCommandRequest
@@ -64,7 +65,7 @@ class `FPR_PSE#1 - AppDev` {
       val file_apk: File =
         File(Paths.get("src", "test", "resources", TEST_MODULE).toUri());
 
-      preparerInstall(file_apk, false);
+      AdamUtils.InstallApk(file_apk, false,adb);
 
       Thread.sleep(SHORT_TIMEOUT*2);
 
@@ -72,7 +73,7 @@ class `FPR_PSE#1 - AppDev` {
 
       //launch application (am start -n com.package.name/com.package.name.ActivityName)
       response =   client.execute(ShellCommandRequest("am start -n $TEST_PACKAGE/$TEST_PACKAGE.MainActivity"), adb.deviceSerial);
-      Thread.sleep(SHORT_TIMEOUT*5);
+      Thread.sleep(LONG_TIMEOUT);
       response =
         client.execute(ShellCommandRequest("run-as ${TEST_PACKAGE} cat /data/data/$TEST_PACKAGE/shared_prefs/UniqueID.xml"), adb.deviceSerial)
       //store preference into map A
@@ -105,7 +106,7 @@ class `FPR_PSE#1 - AppDev` {
       Thread.sleep(SHORT_TIMEOUT*2);
 
       //install application again
-      preparerInstall(file_apk, false);
+      AdamUtils.InstallApk(file_apk, false,adb);
       Thread.sleep(SHORT_TIMEOUT*2);
 
       //launch application
@@ -141,23 +142,4 @@ class `FPR_PSE#1 - AppDev` {
     }
     return ret;
   }
-
-  fun preparerInstall(apkFile: File, reinstall: Boolean = false): ShellCommandResult {
-    var stdio: ShellCommandResult
-    runBlocking {
-      val fileName = apkFile.name
-      val channel = client.execute(PushFileRequest(apkFile, "/data/local/tmp/$fileName"),
-                                   GlobalScope,
-                                   serial = adb.deviceSerial);
-      while (!channel.isClosedForReceive) {
-        val progress: Double? =
-          channel.tryReceive().onClosed {
-          }.getOrNull()
-      }
-      stdio = client.execute(InstallRemotePackageRequest(
-        "/data/local/tmp/$fileName", reinstall), serial = adb.deviceSerial)
-    }
-    return stdio;
-  }
-
 }

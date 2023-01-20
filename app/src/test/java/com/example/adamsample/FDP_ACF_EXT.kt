@@ -4,6 +4,7 @@ package com.example.adamsample
 import assertk.assertThat
 import assertk.assertions.startsWith
 import com.example.adamsample.rule.AdbDeviceRule
+import com.example.adamsample.utils.AdamUtils
 import com.malinskiy.adam.request.pkg.InstallRemotePackageRequest
 import com.malinskiy.adam.request.pkg.UninstallRemotePackageRequest
 import com.malinskiy.adam.request.shell.v1.ShellCommandRequest
@@ -66,14 +67,14 @@ class `FDP_ACF_EXT#1 - App Update ` {
       val file_apk_v2_debug: File =
         File(Paths.get("src", "test", "resources", "appupdate-v2-debug.apk").toUri());
 
-      var res = preparerInstall(file_apk_v1_debug, false);
+      var res = AdamUtils.InstallApk(file_apk_v1_debug,false,adb);
       assertThat(res.output).startsWith("Success")
 
-      res = preparerInstall(file_apk_v2_debug);
+      res =  AdamUtils.InstallApk(file_apk_v2_debug,false,adb);
       assertThat(res.output).startsWith("Success")
 
       //degrade
-      res = preparerInstall(file_apk_v1_debug, false);
+      res = AdamUtils.InstallApk(file_apk_v1_debug,false,adb);
       assertThat(res.output).startsWith("Failure")
 
       //unistall the test file before next test
@@ -92,10 +93,10 @@ class `FDP_ACF_EXT#1 - App Update ` {
       val file_apk_v2_signed: File =
         File(Paths.get("src", "test", "resources", "appupdate-v2-signed.apk").toUri());
 
-      var res = preparerInstall(file_apk_v1_debug, false);
+      var res = AdamUtils.InstallApk(file_apk_v1_debug,false,adb);
       assertThat(res.output).startsWith("Success")
       //Signature mismatch case
-      res = preparerInstall(file_apk_v2_signed);
+      res = AdamUtils.InstallApk(file_apk_v2_signed,false,adb);
       assertThat(res.output).startsWith("Failure")
 
       //unistall the test file before next test
@@ -104,21 +105,5 @@ class `FDP_ACF_EXT#1 - App Update ` {
   }
 
 
-  fun preparerInstall(apkFile: File, reinstall: Boolean = false): ShellCommandResult {
-    var stdio: ShellCommandResult
-    runBlocking {
-      val fileName = apkFile.name
-      val channel = client.execute(PushFileRequest(apkFile, "/data/local/tmp/$fileName"),
-                                   GlobalScope,
-                                   serial = adb.deviceSerial);
-      while (!channel.isClosedForReceive) {
-        val progress: Double? =
-          channel.tryReceive().onClosed {
-          }.getOrNull()
-      }
-      stdio = client.execute(InstallRemotePackageRequest(
-        "/data/local/tmp/$fileName", reinstall), serial = adb.deviceSerial)
-    }
-    return stdio;
-  }
+
 }
